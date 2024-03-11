@@ -1,10 +1,16 @@
 import { useState } from 'react';
 import { SongType } from '../types';
+import { addSong, removeSong } from '../services/favoriteSongsAPI';
 
 function MusicCard({ trackId, trackName, previewUrl }: SongType) {
   const [isFavorited, setFavorited] = useState(false);
 
   const toggleFavorite = () => {
+    if (isFavorited) {
+      removeSong({ trackId, trackName, previewUrl });
+    } else {
+      addSong({ trackId, trackName, previewUrl });
+    }
     setFavorited(!isFavorited);
   };
 
