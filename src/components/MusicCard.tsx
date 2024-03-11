@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SongType } from '../types';
-import { addSong, removeSong } from '../services/favoriteSongsAPI';
+import { addSong, removeSong, getFavoriteSongs } from '../services/favoriteSongsAPI';
 
 function MusicCard({ trackId, trackName, previewUrl }: SongType) {
   const [isFavorited, setFavorited] = useState(false);
@@ -13,6 +13,16 @@ function MusicCard({ trackId, trackName, previewUrl }: SongType) {
     }
     setFavorited(!isFavorited);
   };
+
+  useEffect(() => {
+    const fetchFavoriteSongs = async () => {
+      const favoriteSongs = await getFavoriteSongs();
+      const isSongFavorited = favoriteSongs.some((song) => song.trackId === trackId);
+      setFavorited(isSongFavorited);
+    };
+
+    fetchFavoriteSongs();
+  }, [trackId]);
 
   return (
     <div>
