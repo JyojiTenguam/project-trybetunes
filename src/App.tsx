@@ -2,7 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import Login from './components/Login';
 import NotFound from './pages/NotFound';
 import Search from './components/Search';
-import Album from './pages/Album';
+import Album from './components/Album';
 
 function App() {
   return (
