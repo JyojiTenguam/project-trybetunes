@@ -1,46 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import { getFavoriteSongs, removeSong } from '../services/favoriteSongsAPI';
-import MusicCard from './MusicCard';
-import { SongType } from '../types';
+import MusicCard, { SongType } from './MusicCard';
 import Loading from './Loading';
+
+interface MusicCardProps extends SongType {
+  onRemove: () => void;
+}
 
 function Favorites() {
   const [favoriteSongs, setFavoriteSongs] = useState<SongType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchFavoriteSongs = async () => {
-    const songs = await getFavoriteSongs();
-    setFavoriteSongs(songs);
-    setIsLoading(false);
-  };
-
   useEffect(() => {
-    fetchFavoriteSongs();
+    const fetchData = async () => {
+      try {
+        const songs = await getFavoriteSongs();
+        setFavoriteSongs(songs);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching favorite songs:', error);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+    };
   }, []);
 
-  const handleRemoveSong = async (trackId: number) => {
-    const songToRemove = favoriteSongs.find((song) => song.trackId === trackId);
-
-    if (songToRemove) {
-      await removeSong(songToRemove);
-      fetchFavoriteSongs();
+  const handleRemoveFavorite = (song: SongType) => {
+    try {
+      removeSong(song);
+      setFavoriteSongs((prevSongs) => prevSongs
+        .filter((prevSong) => prevSong.trackId !== song.trackId));
+    } catch (error) {
+      console.error('Error removing favorite song:', error);
     }
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return <Loading />;
+    } if (favoriteSongs.length > 0) {
+      return favoriteSongs.map((song: SongType) => {
+        const musicCardProps: MusicCardProps = {
+          ...song,
+          onRemove: () => handleRemoveFavorite(song),
+        };
+
+        return <MusicCard key={ song.trackId } { ...musicCardProps } />;
+      });
+    }
+    return <h3>Não há músicas favoritas.</h3>;
   };
 
   return (
     <div>
-      {isLoading ? (
-        <Loading />
-      ) : (
-        favoriteSongs.map((song) => (
-          <MusicCard
-            key={ song.trackId }
-            { ...song }
-            updateFavoriteSongs={ fetchFavoriteSongs }
-            onRemove={ handleRemoveSong }
-          />
-        ))
-      )}
+      { renderContent() }
     </div>
   );
 }

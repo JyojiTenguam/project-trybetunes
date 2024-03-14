@@ -1,39 +1,35 @@
 import { useState, useEffect } from 'react';
-import { getFavoriteSongs, addSong, removeSong } from '../services/favoriteSongsAPI';
-import { SongType } from '../types';
+import { addSong, removeSong, getFavoriteSongs } from '../services/favoriteSongsAPI';
+import checked_heart from '../images/checked_heart.png';
+import empty_heart from '../images/empty_heart.png';
 
-interface MusicCardProps extends SongType {
-  updateFavoriteSongs: () => Promise<void>;
-  onRemove: (trackId: number) => Promise<void>;
+export interface SongType {
+  trackId: number;
+  trackName: string;
+  previewUrl: string;
+  onRemove?: () => void;
 }
 
-function MusicCard({ trackId, trackName, previewUrl, updateFavoriteSongs, onRemove }
-: MusicCardProps) {
+function MusicCard({ trackId, trackName, previewUrl, onRemove = () => {} }: SongType) {
   const [isFavorited, setFavorited] = useState(false);
 
   const toggleFavorite = () => {
     if (isFavorited) {
-      removeSong({ trackId, trackName, previewUrl }).then(() => {
-        setFavorited(false);
-        updateFavoriteSongs();
-      });
+      removeSong({ trackId, trackName, previewUrl });
+      if (onRemove) {
+        onRemove();
+      }
     } else {
-      addSong({ trackId, trackName, previewUrl }).then(() => {
-        setFavorited(true);
-        updateFavoriteSongs();
-      });
+      addSong({ trackId, trackName, previewUrl });
     }
+    setFavorited(!isFavorited);
   };
 
   useEffect(() => {
     const fetchFavoriteSongs = async () => {
-      try {
-        const favoriteSongs = await getFavoriteSongs();
-        const isSongFavorited = favoriteSongs.some((song) => song.trackId === trackId);
-        setFavorited(isSongFavorited);
-      } catch (error) {
-        console.error('Error fetching favorite songs:', error);
-      }
+      const favoriteSongs = await getFavoriteSongs();
+      const isSongFavorited = favoriteSongs.some((song) => song.trackId === trackId);
+      setFavorited(isSongFavorited);
     };
 
     fetchFavoriteSongs();
@@ -49,20 +45,18 @@ function MusicCard({ trackId, trackName, previewUrl, updateFavoriteSongs, onRemo
           onChange={ toggleFavorite }
         />
         <img
-          src={ isFavorited
-            ? '/src/images/checked_heart.png'
-            : '/src/images/empty_heart.png' }
+          className="heart-img"
+          src={ isFavorited ? checked_heart : empty_heart }
           alt="favorite"
         />
         <audio data-testid="audio-component" src={ previewUrl } controls>
           <track kind="captions" />
           O seu navegador não suporta o elemento
-          <code>audio</code>
+          <code>
+            audio
+          </code>
         </audio>
       </label>
-      <button onClick={ () => onRemove(trackId) }>
-        Remover música
-      </button>
     </div>
   );
 }
