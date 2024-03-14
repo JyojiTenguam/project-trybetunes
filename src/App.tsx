@@ -4,6 +4,7 @@ import NotFound from './pages/NotFound';
 import Search from './components/Search';
 import Album from './components/Album';
 import Layout from './components/Layout';
+import Favorites from './components/Favorites';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route element={ <Layout /> }>
           <Route path="/search" element={ <Search /> } />
           <Route path="/album/:id" element={ <Album /> } />
+          <Route path="/favorites" element={ <Favorites /> } />
           <Route path="*" element={ <NotFound /> } />
         </Route>
       </Routes>

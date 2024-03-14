@@ -1,24 +1,39 @@
 import { useState, useEffect } from 'react';
+import { getFavoriteSongs, addSong, removeSong } from '../services/favoriteSongsAPI';
 import { SongType } from '../types';
-import { addSong, removeSong, getFavoriteSongs } from '../services/favoriteSongsAPI';
 
-function MusicCard({ trackId, trackName, previewUrl }: SongType) {
+interface MusicCardProps extends SongType {
+  updateFavoriteSongs: () => Promise<void>;
+  onRemove: (trackId: number) => Promise<void>;
+}
+
+function MusicCard({ trackId, trackName, previewUrl, updateFavoriteSongs, onRemove }
+: MusicCardProps) {
   const [isFavorited, setFavorited] = useState(false);
 
   const toggleFavorite = () => {
     if (isFavorited) {
-      removeSong({ trackId, trackName, previewUrl });
+      removeSong({ trackId, trackName, previewUrl }).then(() => {
+        setFavorited(false);
+        updateFavoriteSongs();
+      });
     } else {
-      addSong({ trackId, trackName, previewUrl });
+      addSong({ trackId, trackName, previewUrl }).then(() => {
+        setFavorited(true);
+        updateFavoriteSongs();
+      });
     }
-    setFavorited(!isFavorited);
   };
 
   useEffect(() => {
     const fetchFavoriteSongs = async () => {
-      const favoriteSongs = await getFavoriteSongs();
-      const isSongFavorited = favoriteSongs.some((song) => song.trackId === trackId);
-      setFavorited(isSongFavorited);
+      try {
+        const favoriteSongs = await getFavoriteSongs();
+        const isSongFavorited = favoriteSongs.some((song) => song.trackId === trackId);
+        setFavorited(isSongFavorited);
+      } catch (error) {
+        console.error('Error fetching favorite songs:', error);
+      }
     };
 
     fetchFavoriteSongs();
@@ -42,11 +57,12 @@ function MusicCard({ trackId, trackName, previewUrl }: SongType) {
         <audio data-testid="audio-component" src={ previewUrl } controls>
           <track kind="captions" />
           O seu navegador não suporta o elemento
-          <code>
-            audio
-          </code>
+          <code>audio</code>
         </audio>
       </label>
+      <button onClick={ () => onRemove(trackId) }>
+        Remover música
+      </button>
     </div>
   );
 }
